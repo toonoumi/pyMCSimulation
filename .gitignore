@@ -2,3 +2,4 @@ data/*
 data/test.bin
 *.pyc
 freader/*.pyc
+*.code-workspace
