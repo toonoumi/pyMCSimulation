@@ -6,8 +6,13 @@ import numba
 import numpy as np
 
 @numba.njit
-def square(x):
-    return x[0]**2+x[1]
+def func_eg(argv):
+    '''
+    Example on how to construct your function. 
+    @param argv is list of variable for the function.
+    @return your function should return its result.
+    '''
+    return argv[0]**2+argv[1]
 
 @numba.njit
 def __mc_gen_rand_sample(func,points,it_count,argc,A,B,rst_range):
@@ -62,6 +67,6 @@ if __name__ == "__main__":
     fr.fclose(fd)
     '''
     with Chronometer() as t:
-        rst=mc_integration(square,2,np.array([0,0],dtype='float32'),np.array([3,4],dtype='float32'),it_count=100000000)
+        rst=mc_integration(func_eg,2,np.array([0,0],dtype='float32'),np.array([2,4],dtype='float32'),it_count=100000000)
     print(rst," Time consumed: ",t)
     0
