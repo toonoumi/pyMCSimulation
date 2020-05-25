@@ -7,7 +7,7 @@ import numpy as np
 
 @numba.njit
 def square(x):
-    return x[0]**2
+    return x[0]**2+x[1]
 
 @numba.njit
 def __mc_gen_rand_sample(func,points,it_count,argc,A,B,rst_range):
@@ -44,12 +44,12 @@ def mc_integration(func,argc,A,B,it_count=100000,dtype='float32'):
     #get min max range
     rst_min=func(A)
     rst_max=func(B)
-    #print(rst_min," ",rst_max)
     #generate random sample
     __mc_gen_rand_sample(func,points,it_count,argc,A,B,np.array([rst_min,rst_max]))
     #test random sample
     rst=__mc_test_sample(points,it_count,argc)
-    rst*=B[0]-A[0]
+    for i in range(argc):
+        rst*=(B[i]-A[i])
     return rst
 
 if __name__ == "__main__":
@@ -62,6 +62,6 @@ if __name__ == "__main__":
     fr.fclose(fd)
     '''
     with Chronometer() as t:
-        rst=mc_integration(square,1,np.array([0],dtype='float32'),np.array([3],dtype='float32'),it_count=100000000)
+        rst=mc_integration(square,2,np.array([0,0],dtype='float32'),np.array([3,4],dtype='float32'),it_count=100000000)
     print(rst," Time consumed: ",t)
     0
