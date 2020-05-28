@@ -5,8 +5,13 @@ from FileReader import freader as fr
 import time
 from chronometer import Chronometer
 from numba import vectorize
+import secrets
+import struct
 import numba
 import numpy as np
+
+__MAX_ONETIME_IT_COUNT=200000000
+__PRINT_MIDDLE_RST=True
 
 @numba.njit
 def func_eg(argv):
@@ -22,19 +27,22 @@ def __mc_gen_rand_sample(func,points,it_count,argc,A,B,rst_range):
     for i in range(it_count):
         for j in range(argc):
             #points[i][j]=np.random.uniform(low=A[j], high=B[j])
+            #np.random.seed(int(np.random.rand()*1000000))
             points[i][j]=np.random.rand()*(B[j]-A[j])+A[j]
         #points[i][argc]=np.random.uniform(low=rst_range[0],high=rst_range[1])
         points[i][argc]=func(points[i])
         
 
-@numba.njit
+#@numba.njit
 def __mc_test_sample(points,it_count,argc):
-    hit=0
+    '''hit=0
     for i in range(it_count):
-       hit+=points[i][argc]
-    return hit/it_count
+       hit+=points[i][argc]'''
+    #rst=np.sum(points.transpose()[argc],dtype='float64')/it_count
+    rst=np.mean(points.transpose()[argc],dtype='float64')
+    return rst
 
-def mc_integration(func,argc,A,B,it_count=100000,dtype='float32'):
+def __mc_integration_helper(func,argc,A,B,it_count=10000,dtype='float32'):
     '''
         Calculate the integration of a function from array A to array B
         for A=[a1,a2,a3...], B=[b1,b2,b3...], length of A and B must match.
@@ -60,6 +68,33 @@ def mc_integration(func,argc,A,B,it_count=100000,dtype='float32'):
         rst*=(B[i]-A[i])
     return rst
 
+def mc_integration(func,argc,A,B,it_count=10000,dtype='float32'):
+    '''
+        Calculate the integration of a function from array A to array B
+        for A=[a1,a2,a3...], B=[b1,b2,b3...], length of A and B must match.
+        @param func is the function to run
+        @param argc is the number of parameter of such function
+        @param it_count is the number of iteration
+    '''
+    if(it_count<=__MAX_ONETIME_IT_COUNT):
+        return __mc_integration_helper(func,argc,A,B,it_count,dtype)
+    remain=it_count
+    rst=[]
+    if __PRINT_MIDDLE_RST:
+        print('Number of sampling exceeded maximum, check the setting parameters to adjust.')
+        print('Execution is devided into %d runs.' % (remain/__MAX_ONETIME_IT_COUNT+1))
+    while remain>0:
+        if(remain>__MAX_ONETIME_IT_COUNT):
+            rst.append(__mc_integration_helper(func,argc,A,B,__MAX_ONETIME_IT_COUNT,dtype))
+            remain-=__MAX_ONETIME_IT_COUNT
+        else:
+            rst.append(__mc_integration_helper(func,argc,A,B,remain,dtype))
+            remain=0
+        if __PRINT_MIDDLE_RST:
+                print(len(rst)," run, result:",rst[len(rst)-1])
+    return np.mean(rst)
+
+
 if __name__ == "__main__":
     '''
     fd= fr.fopen('test.bin')   
@@ -70,6 +105,6 @@ if __name__ == "__main__":
     fr.fclose(fd)
     '''
     with Chronometer() as t:
-        rst=mc_integration(func_eg,2,np.array([0,0],dtype='float32'),np.array([2,4],dtype='float32'),it_count=100000000)
+        rst=mc_integration(func_eg,2,np.array([0,0],dtype='float32'),np.array([2,4],dtype='float32'),it_count=2*10**10)
     print(rst," Time consumed: ",t)
     0
