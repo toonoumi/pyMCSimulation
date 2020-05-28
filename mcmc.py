@@ -26,19 +26,12 @@ def func_eg(argv):
 def __mc_gen_rand_sample(func,points,it_count,argc,A,B,rst_range):
     for i in range(it_count):
         for j in range(argc):
-            #points[i][j]=np.random.uniform(low=A[j], high=B[j])
-            #np.random.seed(int(np.random.rand()*1000000))
             points[i][j]=np.random.rand()*(B[j]-A[j])+A[j]
-        #points[i][argc]=np.random.uniform(low=rst_range[0],high=rst_range[1])
         points[i][argc]=func(points[i])
         
 
 #@numba.njit
 def __mc_test_sample(points,it_count,argc):
-    '''hit=0
-    for i in range(it_count):
-       hit+=points[i][argc]'''
-    #rst=np.sum(points.transpose()[argc],dtype='float64')/it_count
     rst=np.mean(points.transpose()[argc],dtype='float64')
     return rst
 
@@ -72,6 +65,7 @@ def mc_integration(func,argc,A,B,it_count=10000,dtype='float32'):
     '''
         Calculate the integration of a function from array A to array B
         for A=[a1,a2,a3...], B=[b1,b2,b3...], length of A and B must match.
+        if a large number is used, please use float64 instead of float32
         @param func is the function to run
         @param argc is the number of parameter of such function
         @param it_count is the number of iteration
@@ -105,6 +99,6 @@ if __name__ == "__main__":
     fr.fclose(fd)
     '''
     with Chronometer() as t:
-        rst=mc_integration(func_eg,2,np.array([0,0],dtype='float32'),np.array([2,4],dtype='float32'),it_count=2*10**10)
+        rst=mc_integration(func_eg,2,np.array([2000000000,40000],dtype='float32'),np.array([2000000001,40001],dtype='float64'),it_count=2*10**8)
     print(rst," Time consumed: ",t)
     0
